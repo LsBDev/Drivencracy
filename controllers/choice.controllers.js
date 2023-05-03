@@ -18,14 +18,29 @@ export async function registerChoice(req, res) {
     if(existChoise) {
       return res.status(409).send("Essa opção já existe!")
     }
-    
+
     //prazo da enquete, ver como fazer
 
     await db.collection("choices").insertOne(req.body)
-
+    res.status(201).send(req.body)
 
   } catch(err) {
     res.send(err.message)
   }
 
+}
+
+export async function getChoice(req, res) {
+  const {id} = req.params
+
+  try {
+    const choices = await db.collection("choices").find({pollId: id}).toArray()
+    if(!choices) {
+      return res.sendStatus(404)
+    }
+    res.status(200).send(choices)
+
+  } catch(err) {
+    res.send(res.message)
+  }
 }

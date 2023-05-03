@@ -17,7 +17,7 @@ export async function registerPoll(res, req) {
     if(!expireAt) {
       expireAt = dayjs().format("YYYY-MM-DD hh:mm") //como acrescentar 30 dias a partir do atual?
     }
-    
+
     const poll = {title, expireAt}
     await db.collection("polls").insertOne(poll)
     res.status(201).send("Enquete salva com sucesso!")
@@ -37,7 +37,3 @@ export async function allPolls(req, res) {
   }
 }
 
-
-// export async function getPoll(req, res) {
-
-// }
