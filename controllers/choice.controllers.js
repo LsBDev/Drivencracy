@@ -44,3 +44,26 @@ export async function getChoice(req, res) {
     res.send(res.message)
   }
 }
+
+export async function voteChoice(req, res) {
+  const {id}= req.params
+  
+  try {
+    const vote = await db.collection("choices").findOne({_id: id})
+    if(!vote) {
+      return res.status(404).send("Opção não existe!")
+    }
+    //ver tempo de expiração da enquete -> retornar 403
+    const objectVote = 
+    {
+      _id: id
+      date: dayjs().format("HH:mm:ss")
+    }
+
+    await db.collection("votes").insertOne(objectVote)
+    res.sendStatus(201)
+
+  } catch(err) {
+    res.send(err.message)
+  }
+}
