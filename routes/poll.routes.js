@@ -1,10 +1,9 @@
 import { Router } from "express"
-// import validadeSchema
-// importar esquemas e controllers
+import { allPolls, registerPoll } from "../controllers/poll.controllers"
 
 const pollRoutes = Router()
 
-// pollRouter.post("/poll", controller)
-// pollRouter.get("/poll", controller)
-// pollRouter.get("/poll/:id/choice", controller)
-// pollRouter.get("/poll/:id/result", controller)
+pollRoutes.post("/poll", registerPoll)
+pollRoutes.get("/poll", allPolls)
+// pollRoutes.get("/poll/:id/choice", controller)
+// pollRoutes.get("/poll/:id/result", controller)
