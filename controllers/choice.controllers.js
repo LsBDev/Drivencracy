@@ -1,5 +1,6 @@
 import { ObjectId } from "mongodb"
 import { db } from "../database/database.connection"
+import dayjs from "dayjs"
 
 
 export async function registerChoice(req, res) {
@@ -11,15 +12,16 @@ export async function registerChoice(req, res) {
 
   try {
     const findPoll = await db.collection("polls").findOne({_id: ObjectId(pollId)})
-    const existChoise = await db.collection("choices").findOne({title: title})
+    const existChoice = await db.collection("choices").findOne({title: title})
     if(!findPoll) {
       return res.status(404).send("Enquete não encontrada!")
     }
-    if(existChoise) {
+    if(existChoice) {
       return res.status(409).send("Essa opção já existe!")
     }
-
-    //prazo da enquete, ver como fazer
+    if(findPoll.expireAt < dayjs().format("YYYY-MM-DD HH:mm")) {
+      return res.status(403).send("Enquete expirada!")
+    }
 
     await db.collection("choices").insertOne(req.body)
     res.status(201).send(req.body)
@@ -30,13 +32,14 @@ export async function registerChoice(req, res) {
 
 }
 
+
 export async function getChoice(req, res) {
   const {id} = req.params
 
   try {
-    const choices = await db.collection("choices").find({pollId: id}).toArray()
-    if(!choices) {
-      return res.sendStatus(404)
+    const poll = await db.collection("polls").findOne({_id: ObjectId(id)})
+    if(!poll) {
+      return res.status(404).send("Enquete não existe!")
     }
     res.status(200).send(choices)
 
@@ -45,19 +48,24 @@ export async function getChoice(req, res) {
   }
 }
 
+
 export async function voteChoice(req, res) {
   const {id}= req.params
   
   try {
-    const vote = await db.collection("choices").findOne({_id: id})
-    if(!vote) {
+    const choice = await db.collection("choices").findOne({_id: ObjectId(id)})
+    if(!choice) {
       return res.status(404).send("Opção não existe!")
     }
-    //ver tempo de expiração da enquete -> retornar 403
-    const objectVote = 
-    {
-      _id: id
-      date: dayjs().format("HH:mm:ss")
+    const poll = await db.collection("polls").findOne({_id: ObjectId(choice.pollId)})
+    if(poll.expireAt < dayjs().format("YYYY-MM-DD HH:mm")) {
+      return res.status(403).send("Enquete expirada!")
+    }
+
+    const objectVote =
+    { 
+      createdAt: dayjs().format("HH:mm:ss"),
+      choiceId: id
     }
 
     await db.collection("votes").insertOne(objectVote)

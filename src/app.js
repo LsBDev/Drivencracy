@@ -1,4 +1,4 @@
-import express, { Router, json } from "express"
+import express, { json } from "express"
 import cors from "cors"
 import router from "../routes/index.routes"
 

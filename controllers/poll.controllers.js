@@ -15,7 +15,7 @@ export async function registerPoll(res, req) {
       return res.status(409).send("Enquete já existe!")
     }
     if(!expireAt) {
-      expireAt = dayjs().format("YYYY-MM-DD hh:mm") //como acrescentar 30 dias a partir do atual?
+      expireAt = dayjs().add(30, "day").format("YYYY-MM-DD HH:mm")
     }
 
     const poll = {title, expireAt}
@@ -27,6 +27,7 @@ export async function registerPoll(res, req) {
   }
 }
 
+
 export async function allPolls(req, res) {
   try {
     const polls = await db.collection("polls").find().toArray()
@@ -37,3 +38,24 @@ export async function allPolls(req, res) {
   }
 }
 
+
+export async function result(req, res) {
+  const {id} = req.params
+
+  try {
+    const poll = await db.collection("polls").findOne({_id: ObjectId(id)})
+    if(!poll) {
+      return  sendStatus(404)
+    }
+    const choices = await db.collection("choices").find({pollId: id}).toArray()
+    const results = choices.map( async (item) => {      
+      const votes = await db.collection("votes").find({choiceId: item._id }).toArray()
+      return {title: item.title, votes: votes.length}
+    })
+    const newObject = {...poll}
+    newObject.result = results
+
+  } catch(err) {
+    res.send(err.message)
+  }
+}
