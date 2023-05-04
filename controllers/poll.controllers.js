@@ -1,9 +1,10 @@
-import { db } from "../database/database.connection"
+import { ObjectId } from "mongodb"
+import { db } from "../database/database.connection.js"
 import dayjs from "dayjs"
 
 
-export async function registerPoll(res, req) {
-  const {title, expireAt} = req.body
+export async function registerPoll(req, res) {
+  let {title, expireAt} = req.body
 
   try {
     if(!title) {
@@ -43,17 +44,18 @@ export async function result(req, res) {
   const {id} = req.params
 
   try {
-    const poll = await db.collection("polls").findOne({_id: ObjectId(id)})
+    const poll = await db.collection("polls").findOne({_id: new ObjectId(id)})
     if(!poll) {
       return  sendStatus(404)
     }
     const choices = await db.collection("choices").find({pollId: id}).toArray()
-    const results = choices.map( async (item) => {      
-      const votes = await db.collection("votes").find({choiceId: item._id }).toArray()
+    const results = await Promise.all(choices.map(async(item) => {      
+      const votes = await db.collection("votes").find({choiceId: item._id.toString()}).toArray()
       return {title: item.title, votes: votes.length}
-    })
-    const newObject = {...poll}
+    }))
+    const newObject = poll
     newObject.result = results
+    res.status(200).send(newObject)
 
   } catch(err) {
     res.send(err.message)

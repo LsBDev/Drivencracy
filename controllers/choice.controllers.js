@@ -1,5 +1,5 @@
 import { ObjectId } from "mongodb"
-import { db } from "../database/database.connection"
+import { db } from "../database/database.connection.js"
 import dayjs from "dayjs"
 
 
@@ -11,7 +11,7 @@ export async function registerChoice(req, res) {
   }
 
   try {
-    const findPoll = await db.collection("polls").findOne({_id: ObjectId(pollId)})
+    const findPoll = await db.collection("polls").findOne({_id: new ObjectId(pollId)})
     const existChoice = await db.collection("choices").findOne({title: title})
     if(!findPoll) {
       return res.status(404).send("Enquete não encontrada!")
@@ -37,10 +37,11 @@ export async function getChoice(req, res) {
   const {id} = req.params
 
   try {
-    const poll = await db.collection("polls").findOne({_id: ObjectId(id)})
+    const poll = await db.collection("polls").findOne({_id: new ObjectId(id)})
     if(!poll) {
       return res.status(404).send("Enquete não existe!")
     }
+    const choices = await db.collection("choices").find({pollId: id}).toArray()
     res.status(200).send(choices)
 
   } catch(err) {
@@ -53,11 +54,11 @@ export async function voteChoice(req, res) {
   const {id}= req.params
   
   try {
-    const choice = await db.collection("choices").findOne({_id: ObjectId(id)})
+    const choice = await db.collection("choices").findOne({_id: new ObjectId(id)})
     if(!choice) {
       return res.status(404).send("Opção não existe!")
     }
-    const poll = await db.collection("polls").findOne({_id: ObjectId(choice.pollId)})
+    const poll = await db.collection("polls").findOne({_id: new ObjectId(choice.pollId)})
     if(poll.expireAt < dayjs().format("YYYY-MM-DD HH:mm")) {
       return res.status(403).send("Enquete expirada!")
     }
